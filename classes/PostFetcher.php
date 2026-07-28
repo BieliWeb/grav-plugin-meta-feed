@@ -10,19 +10,14 @@ class PostFetcher
 {
     private Grav $grav;
     private MetaGraphApi $api;
-    private string $mediaDir;
-    private string $mediaUrl = '/user/media/meta-feed';
+    private string $postsBasePath;
 
     public function __construct(Grav $grav)
     {
         $this->grav = $grav;
-        $config     = $grav['config']->get('plugins.meta-feed');
-        $this->api  = new MetaGraphApi($config['api_version'] ?? '21.0');
-
-        $this->mediaDir = $grav['locator']->findResource('user://media', true, true) . '/meta-feed';
-        if (!is_dir($this->mediaDir)) {
-            mkdir($this->mediaDir, 0755, true);
-        }
+        $config = $grav['config']->get('plugins.meta-feed');
+        $this->api = new MetaGraphApi($config['api_version'] ?? '21.0');
+        $this->postsBasePath = $grav['locator']->findResource('user-data://meta-feed/posts', true, true);
     }
 
     public function fetchAll(): void
@@ -66,34 +61,43 @@ class PostFetcher
             return;
         }
 
+        // Create the object folder before saving so media can be placed there
+        $objectFolder = $this->postsBasePath . '/' . $key;
+        if (!is_dir($objectFolder)) {
+            mkdir($objectFolder, 0755, true);
+        }
+
         $mediaType = $rawPost['media_type'] ?? 'IMAGE';
         $cdnUrl    = $rawPost['full_picture'] ?? $rawPost['media_url'] ?? '';
         $thumbUrl  = $rawPost['thumbnail_url'] ?? '';
 
-        $imageUrl = $this->downloadMedia(
+        $imageFile = $this->downloadMedia(
             $mediaType === 'VIDEO' ? $thumbUrl : $cdnUrl,
-            $key
+            $objectFolder,
+            'image'
         );
-        $thumbnailUrl = $mediaType === 'VIDEO' ? $this->downloadMedia($thumbUrl, $key . '-thumb') : '';
+        $thumbnailFile = $mediaType === 'VIDEO'
+            ? $this->downloadMedia($thumbUrl, $objectFolder, 'thumbnail')
+            : '';
 
         $object = $directory->createObject([
-            'active'        => true,
-            'provider'      => $account['platform'],
-            'post_id'       => $postId,
-            'account_id'    => $account['id'],
-            'message'       => $rawPost['message'] ?? $rawPost['caption'] ?? '',
-            'image_url'     => $imageUrl ?: $cdnUrl,
-            'thumbnail_url' => $thumbnailUrl ?: $thumbUrl,
-            'media_type'    => $mediaType,
-            'link'          => $rawPost['permalink_url'] ?? $rawPost['permalink'] ?? '',
-            'published_at'  => $rawPost['created_time'] ?? $rawPost['timestamp'] ?? '',
-            'fetched_at'    => (new \DateTime())->format('Y-m-d H:i:s'),
+            'active'         => true,
+            'provider'       => $account['platform'],
+            'post_id'        => $postId,
+            'account_id'     => $account['id'],
+            'message'        => $rawPost['message'] ?? $rawPost['caption'] ?? '',
+            'image_file'     => $imageFile,
+            'thumbnail_file' => $thumbnailFile,
+            'media_type'     => $mediaType,
+            'link'           => $rawPost['permalink_url'] ?? $rawPost['permalink'] ?? '',
+            'published_at'   => $rawPost['created_time'] ?? $rawPost['timestamp'] ?? '',
+            'fetched_at'     => (new \DateTime())->format('Y-m-d H:i:s'),
         ], $key);
 
         $object->save();
     }
 
-    private function downloadMedia(string $url, string $key): string
+    private function downloadMedia(string $url, string $folder, string $basename): string
     {
         if (empty($url)) {
             return '';
@@ -122,12 +126,12 @@ class PostFetcher
                 default                            => 'jpg',
             };
 
-            $filename = $key . '.' . $ext;
-            file_put_contents($this->mediaDir . '/' . $filename, $content);
+            $filename = $basename . '.' . $ext;
+            file_put_contents($folder . '/' . $filename, $content);
 
-            return $this->mediaUrl . '/' . $filename;
+            return $filename;
         } catch (\Exception $e) {
-            $this->grav['log']->warning('MetaFeed: Media download failed for ' . $key . ': ' . $e->getMessage());
+            $this->grav['log']->warning('MetaFeed: Media download failed: ' . $e->getMessage());
             return '';
         }
     }

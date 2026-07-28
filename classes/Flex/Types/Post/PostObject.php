@@ -22,14 +22,14 @@ class PostObject extends GenericObject
         return (string)$this->getProperty('message', '');
     }
 
-    public function getImageUrl(): string
+    public function getImageFile(): string
     {
-        return (string)$this->getProperty('image_url', '');
+        return (string)$this->getProperty('image_file', '');
     }
 
-    public function getThumbnailUrl(): string
+    public function getThumbnailFile(): string
     {
-        return (string)$this->getProperty('thumbnail_url', '');
+        return (string)$this->getProperty('thumbnail_file', '');
     }
 
     public function getMediaType(): string
@@ -45,5 +45,27 @@ class PostObject extends GenericObject
     public function getPublishedAt(): string
     {
         return (string)$this->getProperty('published_at', '');
+    }
+
+    // Convenience for Twig: {{ post.image_url }}
+    public function getImageUrl(): string
+    {
+        $file = $this->getImageFile();
+        if (!$file) {
+            return '';
+        }
+        $medium = $this->getMedia()[$file] ?? null;
+        return $medium ? $medium->url() : '';
+    }
+
+    // Convenience for Twig: {{ post.thumbnail_url }}
+    public function getThumbnailUrl(): string
+    {
+        $file = $this->getThumbnailFile();
+        if (!$file) {
+            return '';
+        }
+        $medium = $this->getMedia()[$file] ?? null;
+        return $medium ? $medium->url() : '';
     }
 }

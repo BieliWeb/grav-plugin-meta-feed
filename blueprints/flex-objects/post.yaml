@@ -104,14 +104,14 @@ form:
             disabled: true
             rows: 4
 
-        image_url:
+        image_file:
             type: text
-            label: Image URL
+            label: Image File
             disabled: true
 
-        thumbnail_url:
+        thumbnail_file:
             type: text
-            label: Thumbnail URL
+            label: Thumbnail File
             disabled: true
 
         media_type:
