@@ -1,0 +1,25 @@
+{
+  "name": "bieliweb/meta-feed",
+  "type": "grav-plugin",
+  "description": "Fetch and display Instagram and Facebook feeds using the Meta Graph API",
+  "version": "1.0.0",
+  "keywords": ["plugin"],
+  "homepage": "https://github.com/BieliWeb/grav-plugin-meta-feed",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Bieli Web",
+      "email": "info@bieliweb.ch",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=8.3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Grav\\Plugin\\MetaFeed\\": "classes/"
+    },
+    "classmap":  ["meta-feed.php"]
+  }
+}

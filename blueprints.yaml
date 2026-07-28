@@ -1,0 +1,40 @@
+name: Meta Feed
+slug: meta-feed
+type: plugin
+version: 0.1.0
+description: Fetch and display Instagram and Facebook feeds using the Meta Graph API
+icon: plug
+author:
+  name: Bieli Web
+  email: info@bieliweb.ch
+homepage: https://github.com/BieliWeb/grav-plugin-meta-feed
+demo: http://demo.yoursite.com
+keywords: grav, plugin, etc
+bugs: https://github.com/BieliWeb/grav-plugin-meta-feed/issues
+docs: https://github.com/BieliWeb/grav-plugin-meta-feed/blob/develop/README.md
+license: MIT
+
+compatibility:
+  grav: ['2.0']
+
+dependencies:
+  - { name: grav, version: '>=2.0.0' }
+  - { name: flex-objects, version: '>=1.0.0' }
+
+form:
+  validation: loose
+  fields:
+    enabled:
+      type: toggle
+      label: PLUGIN_ADMIN.PLUGIN_STATUS
+      highlight: 1
+      default: 0
+      options:
+        1: PLUGIN_ADMIN.ENABLED
+        0: PLUGIN_ADMIN.DISABLED
+      validate:
+        type: bool
+    text_var:
+      type: text
+      label: PLUGIN_META_FEED.TEXT_VARIABLE
+      help: PLUGIN_META_FEED.TEXT_VARIABLE_HELP
