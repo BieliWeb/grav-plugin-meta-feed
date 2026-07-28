@@ -3,15 +3,13 @@ slug: meta-feed
 type: plugin
 version: 0.1.0
 description: Fetch and display Instagram and Facebook feeds using the Meta Graph API
-icon: plug
+icon: share-alt
 author:
-  name: Bieli Web
+  name: BieliWeb
   email: info@bieliweb.ch
 homepage: https://github.com/BieliWeb/grav-plugin-meta-feed
-demo: http://demo.yoursite.com
-keywords: grav, plugin, etc
 bugs: https://github.com/BieliWeb/grav-plugin-meta-feed/issues
-docs: https://github.com/BieliWeb/grav-plugin-meta-feed/blob/develop/README.md
+docs: https://github.com/BieliWeb/grav-plugin-meta-feed/blob/main/README.md
 license: MIT
 
 compatibility:
@@ -34,7 +32,105 @@ form:
         0: PLUGIN_ADMIN.DISABLED
       validate:
         type: bool
-    text_var:
+
+    settings_section:
+      type: section
+      title: Settings
+      underline: true
+
+    api_version:
       type: text
-      label: PLUGIN_META_FEED.TEXT_VARIABLE
-      help: PLUGIN_META_FEED.TEXT_VARIABLE_HELP
+      label: Meta Graph API Version
+      default: '21.0'
+      help: 'e.g. 21.0'
+
+    fetch_limit:
+      type: number
+      label: Posts per account to fetch
+      default: 20
+      validate:
+        min: 1
+        max: 100
+
+    accounts_section:
+      type: section
+      title: Accounts
+      underline: true
+
+    accounts:
+      type: list
+      label: Accounts
+      style: vertical
+      btnLabel: Add account
+      fields:
+        .id:
+          type: text
+          label: Account ID
+          help: 'Unique identifier, no spaces (e.g. sutterbeck_instagram)'
+          validate:
+            required: true
+
+        .name:
+          type: text
+          label: Display Name
+
+        .platform:
+          type: select
+          label: Platform
+          default: instagram
+          options:
+            instagram: Instagram
+            facebook: Facebook
+          validate:
+            required: true
+
+        .page_id:
+          type: text
+          label: Page / User ID
+          help: 'Facebook Page ID or Instagram Business Account User ID'
+          validate:
+            required: true
+
+        .token_type:
+          type: select
+          label: Token Type
+          default: page
+          options:
+            page: 'Page Token (permanent)'
+            user: 'User Token (60 days – auto-refresh)'
+
+        .access_token:
+          type: text
+          label: Access Token
+
+        .token_expires:
+          type: text
+          label: Token Expiry Date
+          help: 'Format: YYYY-MM-DD — only needed for User Token type'
+          placeholder: '2026-09-25'
+
+        .app_id:
+          type: text
+          label: App ID
+          help: 'Required for Facebook User Token refresh only'
+
+        .app_secret:
+          type: text
+          label: App Secret
+          help: 'Required for Facebook User Token refresh only'
+
+        .use_shared_token:
+          type: toggle
+          label: Use shared token
+          help: 'Use the access token from another account'
+          default: 0
+          options:
+            1: PLUGIN_ADMIN.YES
+            0: PLUGIN_ADMIN.NO
+          validate:
+            type: bool
+
+        .shared_token_account:
+          type: text
+          label: Shared Token Account ID
+          help: 'The Account ID whose token to use'

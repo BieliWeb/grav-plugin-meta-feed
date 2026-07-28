@@ -1,2 +1,4 @@
 enabled: true
-text_var: Custom Text added by the **Meta Feed** plugin (disable plugin to remove)
+api_version: '21.0'
+fetch_limit: 20
+accounts: []

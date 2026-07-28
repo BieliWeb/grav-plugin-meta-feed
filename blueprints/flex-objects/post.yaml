@@ -1,132 +1,135 @@
-title: 'Post'
-description: 'Post'
+title: 'Social Post'
+description: 'Meta (Facebook/Instagram) social post'
 type: flex-objects
 
-# Flex Configuration
 config:
-    # Administration Configuration
     admin:
-        # Admin router (optional)
         router:
-            path: '/post'
-
-        # Admin menu (optional)
+            path: '/posts'
         menu:
             list:
-                route: '/post'
-                title: 'Post'
-                icon: fa-address-card-o
-                # Authorization to collection admin
-                authorize: ['admin.post.list', 'admin.super']
-                # Priority -10 .. 10 (highest goes up)
+                route: '/posts'
+                title: Social Posts
+                icon: fa-share-alt
+                authorize: ['admin.super']
                 priority: 2
-
-        # Admin template type / folder
         template: default
-
-        # Permissions
         permissions:
-            # Primary permissions
             admin.post:
                 type: crudpl
-                label: 'Post'
-
-        # List view
+                label: Social Posts
         list:
-            title: name
+            title: post_id
             fields:
-                published:
+                active:
                     field:
                         type: toggle
-                        label: Published
+                        label: Active
                     width: 8
-                name:
-                    link: edit
-                description:
-
-        # Edit View
+                provider:
+                    width: 12
+                message:
+                    width: 52
+                published_at:
+                    width: 20
         edit:
             title:
-                template: ''
-
-        # Preview View
+                template: '{{ object.provider|upper ~ " – " ~ object.post_id }}'
         preview:
             enabled: false
-            route:
-            #template: '/plugins/flex-objects/directory:contacts'
-
-        # Data Export
         export:
-            enabled: true
-            method: 'jsonSerialize'
-            formatter:
-                class: 'Grav\Framework\File\Formatter\YamlFormatter'
-            filename: 'post'
+            enabled: false
 
-    # Site Configuration
     site:
         templates:
             collection:
-                # Lookup for the template layout files for collections of objects
                 paths:
                     - 'flex/{TYPE}/collection/{LAYOUT}{EXT}'
             object:
-                # Lookup for the template layout files for objects
                 paths:
                     - 'flex/{TYPE}/object/{LAYOUT}{EXT}'
             defaults:
-                # Default template {TYPE}; overridden by filename of this blueprint if template folder exists
-                type: 'post'
-                # Default template {LAYOUT}; can be overridden in render calls (usually Twig in templates)
+                type: post
                 layout: default
 
-    # Data Configuration
     data:
-        # Object class to be used, allowing custom methods for the object
         object: 'Grav\Plugin\MetaFeed\Flex\Types\Post\PostObject'
-        # Collection class to be used, allowing custom methods for the collections
         collection: 'Grav\Plugin\MetaFeed\Flex\Types\Post\PostCollection'
-        # Index class to be used, works as a quick database-like lookup index
         index: 'Grav\Common\Flex\Types\Generic\GenericIndex'
         storage:
-            # Storage class, use single file storage (does not support images and assets)
             class: 'Grav\Framework\Flex\Storage\FolderStorage'
             options:
                 formatter:
-                    # File formatter class, in this case the file is stored in markdown
                     class: 'Grav\Framework\File\Formatter\JsonFormatter'
-                # JSON file where all the objects will be stored
-                folder: user-data://post
+                folder: user-data://meta-feed/posts
         search:
-            # Search options
             options:
                 contains: 1
-            # Fields to be searched
             fields:
-                - name
-                - description
+                - provider
+                - message
 
 form:
     validation: loose
     fields:
-        published:
+        active:
             type: toggle
-            label: Published
+            label: Active
             highlight: 1
             default: 1
             options:
-                1: PLUGIN_ADMIN.YES
-                0: PLUGIN_ADMIN.NO
+                1: 'Yes'
+                0: 'No'
             validate:
                 type: bool
-                required: true
-        name:
+
+        provider:
             type: text
-            label: Name
-            validate:
-                required: true
-        description:
+            label: Provider
+            disabled: true
+
+        post_id:
             type: text
-            label: Description
-            validate:
-                required: true
+            label: Post ID
+            disabled: true
+
+        account_id:
+            type: text
+            label: Account
+            disabled: true
+
+        message:
+            type: textarea
+            label: Message
+            disabled: true
+            rows: 4
+
+        image_url:
+            type: text
+            label: Image URL
+            disabled: true
+
+        thumbnail_url:
+            type: text
+            label: Thumbnail URL
+            disabled: true
+
+        media_type:
+            type: text
+            label: Media Type
+            disabled: true
+
+        link:
+            type: text
+            label: Original Link
+            disabled: true
+
+        published_at:
+            type: text
+            label: Published At
+            disabled: true
+
+        fetched_at:
+            type: text
+            label: Fetched At
+            disabled: true
