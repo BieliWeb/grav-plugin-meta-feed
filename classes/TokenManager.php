@@ -60,11 +60,11 @@ class TokenManager
                 $updated = true;
 
                 $this->grav['log']->info(
-                    'MetaFeed: Token refreshed for ' . ($account['id'] ?? '?') . ', valid until ' . $result['expires']
+                    'MetaFeed: Token refreshed for ' . $this->label($account) . ', valid until ' . $result['expires']
                 );
             } catch (\Exception $e) {
                 $this->grav['log']->error(
-                    'MetaFeed: Token refresh failed for ' . ($account['id'] ?? '?') . ': ' . $e->getMessage()
+                    'MetaFeed: Token refresh failed for ' . $this->label($account) . ': ' . $e->getMessage()
                 );
             }
         }
@@ -73,6 +73,11 @@ class TokenManager
         if ($updated) {
             $this->saveAccounts($accounts);
         }
+    }
+
+    private function label(array $account): string
+    {
+        return $account['name'] ?? (($account['platform'] ?? '?') . ':' . ($account['page_id'] ?? '?'));
     }
 
     private function needsRefresh(string $expiryDate): bool

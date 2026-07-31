@@ -63,16 +63,10 @@ form:
       style: vertical
       btnLabel: Add account
       fields:
-        .id:
-          type: text
-          label: Account ID
-          help: 'Unique identifier, no spaces (e.g. sutterbeck_instagram)'
-          validate:
-            required: true
-
         .name:
           type: text
           label: Display Name
+          help: 'Shown in the admin and in log messages'
 
         .platform:
           type: select
@@ -131,7 +125,7 @@ form:
           validate:
             type: bool
 
-        .shared_token_account:
+        .shared_token_page_id:
           type: text
-          label: Shared Token Account ID
-          help: 'The Account ID whose token to use'
+          label: Shared Token Page / User ID
+          help: 'The Page / User ID of the account whose token to use'

@@ -43,7 +43,7 @@ class PostFetcher
                     $this->savePost($directory, $account, $rawPost);
                 }
             } catch (\Exception $e) {
-                $this->grav['log']->error('MetaFeed: Fetch failed for ' . ($account['id'] ?? '?') . ': ' . $e->getMessage());
+                $this->grav['log']->error('MetaFeed: Fetch failed for ' . $this->label($account) . ': ' . $e->getMessage());
             }
         }
     }
@@ -84,7 +84,7 @@ class PostFetcher
             'active'         => true,
             'provider'       => $account['platform'],
             'post_id'        => $postId,
-            'account_id'     => $account['id'],
+            'page_id'        => $account['page_id'],
             'message'        => $rawPost['message'] ?? $rawPost['caption'] ?? '',
             'image_file'     => $imageFile,
             'thumbnail_file' => $thumbnailFile,
@@ -138,13 +138,21 @@ class PostFetcher
 
     private function resolveToken(array $account, array $accounts): string
     {
-        if (!empty($account['use_shared_token']) && !empty($account['shared_token_account'])) {
+        if (!empty($account['use_shared_token']) && !empty($account['shared_token_page_id'])) {
             foreach ($accounts as $a) {
-                if ($a['id'] === $account['shared_token_account']) {
+                if ((string)$a['page_id'] === (string)$account['shared_token_page_id']) {
                     return $a['access_token'];
                 }
             }
+            throw new \RuntimeException(
+                'Shared token account "' . $account['shared_token_page_id'] . '" not found.'
+            );
         }
         return $account['access_token'];
+    }
+
+    private function label(array $account): string
+    {
+        return $account['name'] ?? ($account['platform'] . ':' . ($account['page_id'] ?? '?'));
     }
 }

@@ -50,8 +50,7 @@ enabled: true
 api_version: '21.0'
 fetch_limit: 20
 accounts:
-  - id: my_instagram
-    name: My Instagram
+  - name: My Instagram
     platform: instagram
     page_id: '17841445266872043'
     token_type: page
@@ -62,17 +61,16 @@ accounts:
 
 | Option | Description |
 |---|---|
-| `id` | Unique identifier, no spaces |
-| `name` | Display name in the admin |
+| `name` | Display name, shown in the admin and in log messages |
 | `platform` | `facebook` or `instagram` |
-| `page_id` | Facebook Page ID or Instagram Business Account ID |
+| `page_id` | Facebook Page ID or Instagram Business Account ID — identifies the account |
 | `token_type` | `page`, `fb_user` or `ig_login` |
 | `access_token` | The access token |
 | `token_expires` | Expiry date `YYYY-MM-DD`, not needed for `page` tokens |
 | `app_id` | Meta App ID, required to refresh `fb_user` tokens |
 | `app_secret` | Meta App Secret, required to refresh `fb_user` tokens |
 | `use_shared_token` | Use another account's token |
-| `shared_token_account` | The `id` of the account whose token to use |
+| `shared_token_page_id` | The `page_id` of the account whose token to use |
 
 ### Token types
 
@@ -90,17 +88,17 @@ Facebook account normally, then point the Instagram account at it:
 
 ```yaml
 accounts:
-  - id: my_facebook
+  - name: My Facebook Page
     platform: facebook
     page_id: '1033808586790860'
     token_type: page
     access_token: 'EAAxxx...'
 
-  - id: my_instagram
+  - name: My Instagram
     platform: instagram
     page_id: '17841445266872043'
     use_shared_token: true
-    shared_token_account: my_facebook
+    shared_token_page_id: '1033808586790860'
 ```
 
 ## Getting your credentials
@@ -143,6 +141,7 @@ Filter by provider and limit the number of posts:
 | Property | Description |
 |---|---|
 | `post.provider` | `facebook` or `instagram` |
+| `post.page_id` | The Page / User ID the post came from |
 | `post.message` | Post text or caption |
 | `post.image_url` | URL of the locally stored image |
 | `post.thumbnail_url` | Thumbnail URL, videos only |

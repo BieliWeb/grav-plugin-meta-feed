@@ -93,9 +93,9 @@ form:
             label: Post ID
             disabled: true
 
-        account_id:
+        page_id:
             type: text
-            label: Account
+            label: Page / User ID
             disabled: true
 
         message:
