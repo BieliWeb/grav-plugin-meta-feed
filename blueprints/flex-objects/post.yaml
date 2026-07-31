@@ -109,11 +109,6 @@ form:
             label: Image File
             disabled: true
 
-        thumbnail_file:
-            type: text
-            label: Thumbnail File
-            disabled: true
-
         media_type:
             type: text
             label: Media Type

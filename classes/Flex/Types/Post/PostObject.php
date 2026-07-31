@@ -27,11 +27,6 @@ class PostObject extends GenericObject
         return (string)$this->getProperty('image_file', '');
     }
 
-    public function getThumbnailFile(): string
-    {
-        return (string)$this->getProperty('thumbnail_file', '');
-    }
-
     public function getMediaType(): string
     {
         return (string)$this->getProperty('media_type', 'IMAGE');
@@ -51,17 +46,6 @@ class PostObject extends GenericObject
     public function getImageUrl(): string
     {
         $file = $this->getImageFile();
-        if (!$file) {
-            return '';
-        }
-        $medium = $this->getMedia()[$file] ?? null;
-        return $medium ? $medium->url() : '';
-    }
-
-    // Convenience for Twig: {{ post.thumbnail_url }}
-    public function getThumbnailUrl(): string
-    {
-        $file = $this->getThumbnailFile();
         if (!$file) {
             return '';
         }

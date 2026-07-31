@@ -34,6 +34,8 @@ class PostFetcher
 
         foreach ($accounts as $account) {
             try {
+                $this->validateAccount($account);
+
                 $token    = $this->resolveToken($account, $accounts);
                 $rawPosts = $account['platform'] === 'facebook'
                     ? $this->api->fetchFacebookPosts($account['page_id'], $token, $limit)
@@ -57,7 +59,9 @@ class PostFetcher
 
         $key = $account['platform'] . '-' . preg_replace('/[^a-zA-Z0-9]/', '-', $postId);
 
-        if ($directory->getObject($key) !== null) {
+        // FolderStorage generates a random key unless the row carries a storage_key,
+        // so the check has to go against the storage rather than the cached index.
+        if ($directory->getStorage()->hasKey($key)) {
             return;
         }
 
@@ -68,26 +72,22 @@ class PostFetcher
         }
 
         $mediaType = $rawPost['media_type'] ?? 'IMAGE';
-        $cdnUrl    = $rawPost['full_picture'] ?? $rawPost['media_url'] ?? '';
-        $thumbUrl  = $rawPost['thumbnail_url'] ?? '';
 
-        $imageFile = $this->downloadMedia(
-            $mediaType === 'VIDEO' ? $thumbUrl : $cdnUrl,
-            $objectFolder,
-            'image'
-        );
-        $thumbnailFile = $mediaType === 'VIDEO'
-            ? $this->downloadMedia($thumbUrl, $objectFolder, 'thumbnail')
-            : '';
+        // Videos have no still image of their own; Meta exposes a poster frame as thumbnail_url.
+        $displayUrl = $mediaType === 'VIDEO'
+            ? ($rawPost['thumbnail_url'] ?? '')
+            : ($rawPost['full_picture'] ?? $rawPost['media_url'] ?? '');
+
+        $imageFile = $this->downloadMedia($displayUrl, $objectFolder, 'image');
 
         $object = $directory->createObject([
+            'storage_key'    => $key,
             'active'         => true,
             'provider'       => $account['platform'],
             'post_id'        => $postId,
             'page_id'        => $account['page_id'],
             'message'        => $rawPost['message'] ?? $rawPost['caption'] ?? '',
             'image_file'     => $imageFile,
-            'thumbnail_file' => $thumbnailFile,
             'media_type'     => $mediaType,
             'link'           => $rawPost['permalink_url'] ?? $rawPost['permalink'] ?? '',
             'published_at'   => $rawPost['created_time'] ?? $rawPost['timestamp'] ?? '',
@@ -149,6 +149,25 @@ class PostFetcher
             );
         }
         return $account['access_token'];
+    }
+
+    private function validateAccount(array $account): void
+    {
+        if (empty($account['page_id'])) {
+            throw new \RuntimeException('Account is missing "page_id".');
+        }
+
+        $platform = $account['platform'] ?? '';
+        if (!in_array($platform, ['facebook', 'instagram'], true)) {
+            throw new \RuntimeException(
+                'Account "' . $account['page_id'] . '" has an invalid "platform" value '
+                . '(got "' . $platform . '", expected "facebook" or "instagram").'
+            );
+        }
+
+        if (empty($account['access_token']) && empty($account['use_shared_token'])) {
+            throw new \RuntimeException('Account "' . $account['page_id'] . '" is missing "access_token".');
+        }
     }
 
     private function label(array $account): string

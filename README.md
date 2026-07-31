@@ -143,8 +143,7 @@ Filter by provider and limit the number of posts:
 | `post.provider` | `facebook` or `instagram` |
 | `post.page_id` | The Page / User ID the post came from |
 | `post.message` | Post text or caption |
-| `post.image_url` | URL of the locally stored image |
-| `post.thumbnail_url` | Thumbnail URL, videos only |
+| `post.image_url` | URL of the locally stored image; for videos this is the poster frame |
 | `post.media_type` | `IMAGE`, `VIDEO` or `CAROUSEL_ALBUM` |
 | `post.link` | Link to the original post |
 | `post.published_at` | Publication timestamp |
