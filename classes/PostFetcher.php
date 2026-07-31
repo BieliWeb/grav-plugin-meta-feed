@@ -20,16 +20,24 @@ class PostFetcher
         $this->postsBasePath = $grav['locator']->findResource('user-data://meta-feed/posts', true, true);
     }
 
-    public function fetchAll(): void
+    /**
+     * @return array{added: int, errors: string[]}
+     */
+    public function fetchAll(): array
     {
         $config   = $this->grav['config']->get('plugins.meta-feed');
         $accounts = $config['accounts'] ?? [];
         $limit    = (int)($config['fetch_limit'] ?? 20);
 
+        $added  = 0;
+        $errors = [];
+
         $directory = $this->grav['flex']->getDirectory('post');
         if (!$directory) {
-            $this->grav['log']->error('MetaFeed: Flex directory "post" not found.');
-            return;
+            $message = 'Flex directory "post" not found.';
+            $this->grav['log']->error('MetaFeed: ' . $message);
+
+            return ['added' => 0, 'errors' => [$message]];
         }
 
         foreach ($accounts as $account) {
@@ -42,19 +50,24 @@ class PostFetcher
                     : $this->api->fetchInstagramPosts($account['page_id'], $token, $limit);
 
                 foreach ($rawPosts as $rawPost) {
-                    $this->savePost($directory, $account, $rawPost);
+                    if ($this->savePost($directory, $account, $rawPost)) {
+                        $added++;
+                    }
                 }
             } catch (\Exception $e) {
+                $errors[] = $this->label($account) . ': ' . $e->getMessage();
                 $this->grav['log']->error('MetaFeed: Fetch failed for ' . $this->label($account) . ': ' . $e->getMessage());
             }
         }
+
+        return ['added' => $added, 'errors' => $errors];
     }
 
-    private function savePost(object $directory, array $account, array $rawPost): void
+    private function savePost(object $directory, array $account, array $rawPost): bool
     {
         $postId = $rawPost['id'] ?? '';
         if (!$postId) {
-            return;
+            return false;
         }
 
         $key = $account['platform'] . '-' . preg_replace('/[^a-zA-Z0-9]/', '-', $postId);
@@ -62,7 +75,7 @@ class PostFetcher
         // FolderStorage generates a random key unless the row carries a storage_key,
         // so the check has to go against the storage rather than the cached index.
         if ($directory->getStorage()->hasKey($key)) {
-            return;
+            return false;
         }
 
         // Create the object folder before saving so media can be placed there
@@ -95,6 +108,8 @@ class PostFetcher
         ], $key);
 
         $object->save();
+
+        return true;
     }
 
     private function downloadMedia(string $url, string $folder, string $basename): string

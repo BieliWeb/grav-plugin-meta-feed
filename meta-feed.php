@@ -18,6 +18,8 @@ class MetaFeedPlugin extends Plugin
         return [
             'onPluginsInitialized'   => [['onPluginsInitialized', 0]],
             'onSchedulerInitialized' => [['onSchedulerInitialized', 0]],
+            'onApiMenubarItems'      => [['onApiMenubarItems', 0]],
+            'onApiMenubarAction'     => [['onApiMenubarAction', 0]],
             FlexRegisterEvent::class => [['onRegisterFlex', 0]],
         ];
     }
@@ -76,6 +78,71 @@ class MetaFeedPlugin extends Plugin
         $job->at($config->get('plugins.meta-feed.refresh_at', '0 5 * * 1'));
         $job->output('logs/meta-feed-refresh-tokens.out');
         $job->backlink('/plugins/meta-feed');
+    }
+
+    /**
+     * Register a toolbar button in the admin so posts can be fetched on demand.
+     */
+    public function onApiMenubarItems($event): void
+    {
+        $items = $event['items'];
+
+        $items[] = [
+            'id'        => 'meta-feed-fetch',
+            'plugin'    => 'meta-feed',
+            'label'     => 'Fetch Social Posts',
+            'icon'      => 'fa-share-alt',
+            'action'    => 'fetch',
+            'confirm'   => 'Fetch new posts from Instagram and Facebook now?',
+            'showLabel' => true,
+            'authorize' => ['admin.super', 'admin.post.create'],
+        ];
+
+        $event['items'] = $items;
+    }
+
+    public function onApiMenubarAction($event): void
+    {
+        if ($event['plugin'] !== 'meta-feed' || $event['action'] !== 'fetch') {
+            return;
+        }
+
+        self::bootstrap();
+
+        try {
+            $result = (new \Grav\Plugin\MetaFeed\PostFetcher($this->grav))->fetchAll();
+        } catch (\Exception $e) {
+            $event['result'] = [
+                'status'  => 'error',
+                'message' => 'Fetch failed: ' . $e->getMessage(),
+            ];
+
+            return;
+        }
+
+        $added  = $result['added'];
+        $errors = $result['errors'];
+
+        if ($errors) {
+            $event['result'] = [
+                'status'  => 'error',
+                'message' => sprintf(
+                    '%d new post(s) fetched, %d account(s) failed: %s',
+                    $added,
+                    count($errors),
+                    implode('; ', $errors)
+                ),
+            ];
+
+            return;
+        }
+
+        $event['result'] = [
+            'status'  => 'success',
+            'message' => $added > 0
+                ? sprintf('%d new post(s) fetched.', $added)
+                : 'No new posts found.',
+        ];
     }
 
     /**

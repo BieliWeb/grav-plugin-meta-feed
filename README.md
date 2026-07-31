@@ -14,7 +14,7 @@ Meta's CDN URLs expire.
 - Media downloaded locally, no expiring CDN URLs
 - Automatic access token refresh before expiry
 - One access token can serve both a Facebook Page and its linked Instagram account
-- Scheduled fetching through Grav's built-in scheduler
+- Scheduled fetching through Grav's built-in scheduler, plus a manual fetch button in the admin
 - A plain, unstyled template you can drop in or copy and adapt
 - No Composer dependencies
 
@@ -202,6 +202,8 @@ Configure the result with `token_type: fb_user`, along with `app_id`, `app_secre
 
 ### Step 6 — Verify
 
+Click **Fetch Social Posts** in the admin toolbar, or run:
+
 ```bash
 bin/plugin meta-feed fetch
 ```
@@ -311,6 +313,12 @@ settings. Make sure Grav's scheduler cron entry is installed — see **Tools →
 admin.
 
 ### Manual runs
+
+A **Fetch Social Posts** button is available in the admin toolbar. It asks for confirmation, then
+fetches immediately and reports how many new posts were imported. The button requires the
+`admin.post.create` permission, or super admin.
+
+From the command line:
 
 ```bash
 bin/plugin meta-feed fetch

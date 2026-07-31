@@ -28,12 +28,18 @@ class FetchCommand extends ConsoleCommand
         $this->output->writeln('<info>Fetching Meta posts...</info>');
 
         try {
-            (new PostFetcher($grav))->fetchAll();
-            $this->output->writeln('<green>Done.</green>');
-            return 0;
+            $result = (new PostFetcher($grav))->fetchAll();
         } catch (\Exception $e) {
             $this->output->writeln('<red>Error: ' . $e->getMessage() . '</red>');
             return 1;
         }
+
+        foreach ($result['errors'] as $error) {
+            $this->output->writeln('<red>' . $error . '</red>');
+        }
+
+        $this->output->writeln(sprintf('<green>%d new post(s) fetched.</green>', $result['added']));
+
+        return $result['errors'] ? 1 : 0;
     }
 }
