@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Grav\Plugin\MetaFeed;
 
+use Grav\Common\Cache;
 use Grav\Common\Grav;
 use Grav\Plugin\MetaFeed\Api\MetaGraphApi;
 
@@ -60,7 +61,34 @@ class PostFetcher
             }
         }
 
+        if ($added > 0) {
+            $this->invalidatePageCache();
+        }
+
         return ['added' => $added, 'errors' => $errors];
+    }
+
+    /**
+     * Grav's page cache only watches the pages folder, so new posts stored under
+     * user/data would otherwise stay invisible until the cache expires on its own.
+     *
+     * Clearing the cache driver alone is not enough: the cache key is derived from
+     * the request root URL, so a CLI or scheduler run addresses a different
+     * namespace than the web requests it needs to invalidate. Grav's own
+     * clearCache() also touches the user config, which changes the config key and
+     * therefore invalidates every namespace. Processed images survive unless
+     * system.cache.clear_images_by_default is enabled.
+     *
+     * This only runs when posts were actually added, so a quiet feed never
+     * triggers it.
+     */
+    private function invalidatePageCache(): void
+    {
+        try {
+            Cache::clearCache('standard');
+        } catch (\Throwable $e) {
+            $this->grav['log']->warning('MetaFeed: Could not invalidate page cache: ' . $e->getMessage());
+        }
     }
 
     private function savePost(object $directory, array $account, array $rawPost): bool

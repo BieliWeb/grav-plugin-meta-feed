@@ -337,6 +337,15 @@ user/data/meta-feed/posts/
 Each post gets a deterministic `{platform}-{post_id}` folder, so a post is only ever imported once.
 Admin changes such as disabling a post are preserved across fetches.
 
+## Caching
+
+Grav's page cache only watches the `pages` folder, so posts arriving under `user/data` would not
+show up on a cached page until the cache expired on its own — by default after seven days. To avoid
+that, the plugin clears Grav's cache whenever a fetch actually imported new posts. A fetch that
+finds nothing new leaves the cache alone, so the hourly schedule does not cause needless churn.
+
+Processed images are kept, unless you have enabled `system.cache.clear_images_by_default`.
+
 Images under `user/data/` are served directly by the web server, while the JSON files are blocked —
 Grav's shipped `.htaccess` and nginx configuration make exactly this distinction. If you use a
 custom server configuration, make sure image files below `user/data/` remain reachable.
