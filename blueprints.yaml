@@ -55,14 +55,14 @@ form:
     fetch_at:
       type: cron
       label: Fetch schedule
-      default: '0 6 * * *'
-      help: 'When to fetch new posts'
+      default: '0 * * * *'
+      help: 'When to fetch new posts. Hourly by default.'
 
     refresh_at:
       type: cron
       label: Token refresh schedule
-      default: '0 5 * * *'
-      help: 'When to check tokens for upcoming expiry'
+      default: '0 5 * * 1'
+      help: 'When to check tokens for upcoming expiry. Weekly is enough, since tokens are renewed 15 days before they expire.'
 
     accounts_section:
       type: section

@@ -15,7 +15,7 @@ Meta's CDN URLs expire.
 - Automatic access token refresh before expiry
 - One access token can serve both a Facebook Page and its linked Instagram account
 - Scheduled fetching through Grav's built-in scheduler
-- A ready-made responsive grid template you can drop in or copy and adapt
+- A plain, unstyled template you can drop in or copy and adapt
 - No Composer dependencies
 
 ## Requirements
@@ -226,43 +226,27 @@ required**. Review only becomes necessary if you want other people to log in thr
 
 ## Usage
 
-### The ready-made template
+### The bundled template
 
-The quickest way to get a feed on the page is the bundled partial, which renders a responsive grid
-and brings its own stylesheet:
+The plugin ships a plain, unstyled partial as a starting point:
 
 ```twig
 {% include 'partials/meta-feed.html.twig' %}
-```
-
-It accepts a few options:
-
-```twig
-{% include 'partials/meta-feed.html.twig' with {
-    provider: 'instagram',
-    limit: 6,
-    columns: 3,
-    captions: true
-} %}
+{% include 'partials/meta-feed.html.twig' with { provider: 'instagram', limit: 6 } %}
 ```
 
 | Variable | Default | Description |
 |---|---|---|
 | `provider` | `''` | `instagram`, `facebook`, or empty for both |
 | `limit` | `12` | Maximum number of posts, `0` for all |
-| `columns` | `3` | Grid columns on desktop |
-| `captions` | `true` | Show post captions |
 
-To change the markup, copy the file into your theme and edit it there:
+It outputs a simple `<ul>` with `meta-feed` and `meta-feed__item` classes and brings no CSS of its
+own, so it inherits your theme's styling. Copy it into your theme to change the markup:
 
 ```
 user/plugins/meta-feed/templates/partials/meta-feed.html.twig
   →  your-theme/templates/partials/meta-feed.html.twig
 ```
-
-The same applies to the stylesheet at `assets/meta-feed.css`. Either copy it into your theme and
-adjust the `addCss()` path in your copy of the template, or simply override the `.meta-feed__*`
-classes in your own CSS.
 
 ### Building your own markup
 
@@ -315,8 +299,12 @@ The plugin registers two jobs with Grav's scheduler:
 
 | Job | Default schedule | Purpose |
 |---|---|---|
-| `meta-feed-fetch` | daily at 06:00 | Fetch new posts |
-| `meta-feed-refresh-tokens` | daily at 05:00 | Refresh tokens within 15 days of expiry |
+| `meta-feed-fetch` | hourly | Fetch new posts |
+| `meta-feed-refresh-tokens` | Mondays at 05:00 | Refresh tokens within 15 days of expiry |
+
+Hourly fetching is well within Meta's rate limits: it is one API call per account per hour, and
+media is only downloaded for posts that are actually new. A weekly token check is enough because
+tokens are renewed 15 days before they expire, leaving a comfortable margin.
 
 Both schedules are configurable through the `fetch_at` and `refresh_at` options in the plugin
 settings. Make sure Grav's scheduler cron entry is installed — see **Tools → Scheduler** in the

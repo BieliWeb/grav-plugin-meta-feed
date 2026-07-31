@@ -64,7 +64,7 @@ class MetaFeedPlugin extends Plugin
             [],
             'meta-feed-fetch'
         );
-        $job->at($config->get('plugins.meta-feed.fetch_at', '0 6 * * *'));
+        $job->at($config->get('plugins.meta-feed.fetch_at', '0 * * * *'));
         $job->output('logs/meta-feed-fetch.out');
         $job->backlink('/plugins/meta-feed');
 
@@ -73,7 +73,7 @@ class MetaFeedPlugin extends Plugin
             [],
             'meta-feed-refresh-tokens'
         );
-        $job->at($config->get('plugins.meta-feed.refresh_at', '0 5 * * *'));
+        $job->at($config->get('plugins.meta-feed.refresh_at', '0 5 * * 1'));
         $job->output('logs/meta-feed-refresh-tokens.out');
         $job->backlink('/plugins/meta-feed');
     }

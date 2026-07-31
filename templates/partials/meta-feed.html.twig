@@ -1,60 +1,35 @@
 {#
-    Ready-to-use social feed grid.
+    Simple, unstyled social feed output.
 
     Include it anywhere in your templates:
 
         {% include 'partials/meta-feed.html.twig' %}
         {% include 'partials/meta-feed.html.twig' with { provider: 'instagram', limit: 6 } %}
 
-    To customise it, copy this file to your theme:
+    To customise it, copy this file to your theme and edit it there:
 
         your-theme/templates/partials/meta-feed.html.twig
 
     Available variables:
         provider  'instagram', 'facebook' or '' for both  (default: '')
         limit     maximum number of posts, 0 for all      (default: 12)
-        columns   number of grid columns                  (default: 3)
-        captions  show post captions                      (default: true)
 #}
-{% set provider = provider|default('') %}
-{% set limit    = limit|default(12) %}
-{% set columns  = columns|default(3) %}
-{% set captions = captions is defined ? captions : true %}
-
-{% set posts = meta_feed_posts(provider, limit) %}
+{% set posts = meta_feed_posts(provider|default(''), limit|default(12)) %}
 
 {% if posts %}
-    {% do assets.addCss('plugin://meta-feed/assets/meta-feed.css') %}
-
-    <ul class="meta-feed" style="--meta-feed-columns: {{ columns }}">
+    <ul class="meta-feed">
         {% for post in posts %}
-            <li class="meta-feed__item meta-feed__item--{{ post.provider }}">
-                <a class="meta-feed__link"
-                   href="{{ post.link }}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-
+            <li class="meta-feed__item">
+                <a href="{{ post.link }}" target="_blank" rel="noopener noreferrer">
                     {% if post.imageUrl %}
-                        <figure class="meta-feed__figure">
-                            <img class="meta-feed__image"
-                                 src="{{ post.imageUrl }}"
-                                 alt="{{ post.message|striptags|truncate(100, false, ' ', '')|e('html_attr') }}"
-                                 loading="lazy">
-                            {% if post.media_type == 'VIDEO' %}
-                                <span class="meta-feed__type" aria-label="Video">▶</span>
-                            {% elseif post.media_type == 'CAROUSEL_ALBUM' %}
-                                <span class="meta-feed__type" aria-label="Album">❐</span>
-                            {% endif %}
-                        </figure>
+                        <img src="{{ post.imageUrl }}"
+                             alt="{{ post.message|striptags|truncate(100, false, ' ', '')|e('html_attr') }}"
+                             loading="lazy">
                     {% endif %}
-
-                    {% if captions and post.message %}
-                        <p class="meta-feed__caption">{{ post.message|striptags|truncate(140, false, ' ', '…') }}</p>
+                    {% if post.message %}
+                        <p>{{ post.message|striptags|truncate(140, false, ' ', '…') }}</p>
                     {% endif %}
-
-                    <time class="meta-feed__date" datetime="{{ post.published_at }}">
-                        {{ post.published_at|date('d.m.Y') }}
-                    </time>
+                    <time datetime="{{ post.published_at }}">{{ post.published_at|date('d.m.Y') }}</time>
                 </a>
             </li>
         {% endfor %}
