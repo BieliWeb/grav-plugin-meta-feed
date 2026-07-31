@@ -1,0 +1,6 @@
+{# Default collection layout. Override in your theme at templates/flex/post/collection/default.html.twig #}
+<div class="meta-feed">
+    {% for post in posts %}
+        {% include 'flex/post/object/default.html.twig' with { post: post } %}
+    {% endfor %}
+</div>

@@ -7,9 +7,19 @@ use Grav\Common\Grav;
 use Grav\Common\File\CompiledYamlFile;
 use Grav\Plugin\MetaFeed\Traits\HttpClientTrait;
 
+/**
+ * Handles access token lifecycle.
+ *
+ * Supported token types:
+ *   page     - Page Access Token derived from a long-lived user token. Does not expire.
+ *   fb_user  - Long-lived Facebook user token (60 days). Refreshed via fb_exchange_token.
+ *   ig_login - Instagram Login token (60 days). Refreshed via graph.instagram.com.
+ */
 class TokenManager
 {
     use HttpClientTrait;
+
+    private const REFRESH_THRESHOLD_DAYS = 15;
 
     private Grav $grav;
 
@@ -25,30 +35,37 @@ class TokenManager
         $updated  = false;
 
         foreach ($accounts as &$account) {
-            if (($account['token_type'] ?? 'page') === 'page') {
+            $type = $account['token_type'] ?? 'page';
+
+            // Page tokens never expire.
+            if ($type === 'page') {
                 continue;
             }
-            if (empty($account['token_expires'])) {
+
+            if (empty($account['token_expires']) || empty($account['access_token'])) {
                 continue;
             }
 
             try {
-                $expires  = new \DateTime($account['token_expires']);
-                $daysLeft = (int)(new \DateTime())->diff($expires)->format('%r%a');
-
-                if ($daysLeft <= 15) {
-                    $result = $account['platform'] === 'instagram'
-                        ? $this->refreshInstagramToken($account['access_token'])
-                        : $this->refreshFacebookToken($account);
-
-                    $account['access_token']  = $result['token'];
-                    $account['token_expires'] = $result['expires'];
-                    $updated = true;
-
-                    $this->grav['log']->info('MetaFeed: Token refreshed for ' . $account['id']);
+                if (!$this->needsRefresh($account['token_expires'])) {
+                    continue;
                 }
+
+                $result = $type === 'ig_login'
+                    ? $this->refreshInstagramLoginToken($account['access_token'])
+                    : $this->refreshFacebookUserToken($account);
+
+                $account['access_token']  = $result['token'];
+                $account['token_expires'] = $result['expires'];
+                $updated = true;
+
+                $this->grav['log']->info(
+                    'MetaFeed: Token refreshed for ' . ($account['id'] ?? '?') . ', valid until ' . $result['expires']
+                );
             } catch (\Exception $e) {
-                $this->grav['log']->error('MetaFeed: Token refresh failed for ' . ($account['id'] ?? '?') . ': ' . $e->getMessage());
+                $this->grav['log']->error(
+                    'MetaFeed: Token refresh failed for ' . ($account['id'] ?? '?') . ': ' . $e->getMessage()
+                );
             }
         }
         unset($account);
@@ -58,34 +75,61 @@ class TokenManager
         }
     }
 
-    private function refreshInstagramToken(string $token): array
+    private function needsRefresh(string $expiryDate): bool
+    {
+        $expires  = new \DateTime($expiryDate);
+        $daysLeft = (int)(new \DateTime())->diff($expires)->format('%r%a');
+
+        return $daysLeft <= self::REFRESH_THRESHOLD_DAYS;
+    }
+
+    /**
+     * Instagram Login tokens (graph.instagram.com), not used with the Facebook Login flow.
+     */
+    private function refreshInstagramLoginToken(string $token): array
     {
         $url = 'https://graph.instagram.com/refresh_access_token'
-            . '?grant_type=ig_refreshed_token'
+            . '?grant_type=ig_refresh_token'
             . '&access_token=' . urlencode($token);
 
         $response = $this->httpGet($url);
 
         return [
             'token'   => $response['access_token'],
-            'expires' => (new \DateTime())->modify('+60 days')->format('Y-m-d'),
+            'expires' => $this->expiryFromResponse($response),
         ];
     }
 
-    private function refreshFacebookToken(array $account): array
+    /**
+     * Long-lived Facebook user tokens. Works for both Facebook Pages and
+     * Instagram Business accounts accessed through the Facebook Login flow.
+     */
+    private function refreshFacebookUserToken(array $account): array
     {
+        if (empty($account['app_id']) || empty($account['app_secret'])) {
+            throw new \RuntimeException('App ID and App Secret are required to refresh a Facebook user token.');
+        }
+
         $url = 'https://graph.facebook.com/oauth/access_token'
             . '?grant_type=fb_exchange_token'
-            . '&client_id='         . urlencode($account['app_id'] ?? '')
-            . '&client_secret='     . urlencode($account['app_secret'] ?? '')
+            . '&client_id='         . urlencode($account['app_id'])
+            . '&client_secret='     . urlencode($account['app_secret'])
             . '&fb_exchange_token=' . urlencode($account['access_token']);
 
         $response = $this->httpGet($url);
 
         return [
             'token'   => $response['access_token'],
-            'expires' => (new \DateTime())->modify('+60 days')->format('Y-m-d'),
+            'expires' => $this->expiryFromResponse($response),
         ];
+    }
+
+    private function expiryFromResponse(array $response): string
+    {
+        $seconds = (int)($response['expires_in'] ?? 0);
+        $days    = $seconds > 0 ? (int)floor($seconds / 86400) : 60;
+
+        return (new \DateTime())->modify("+{$days} days")->format('Y-m-d');
     }
 
     private function saveAccounts(array $accounts): void

@@ -103,21 +103,7 @@ class MetaFeedPlugin extends Plugin
 
     private function registerAutoloader(): void
     {
-        static $registered = false;
-        if ($registered) {
-            return;
-        }
-        $registered = true;
-
-        spl_autoload_register(function (string $class): void {
-            $prefix = 'Grav\\Plugin\\MetaFeed\\';
-            if (!str_starts_with($class, $prefix)) {
-                return;
-            }
-            $file = __DIR__ . '/classes/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
-            if (file_exists($file)) {
-                require_once $file;
-            }
-        });
+        require_once __DIR__ . '/classes/Autoloader.php';
+        \Grav\Plugin\MetaFeed\Autoloader::register();
     }
 }

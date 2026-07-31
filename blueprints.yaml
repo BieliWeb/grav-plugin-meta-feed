@@ -96,8 +96,9 @@ form:
           label: Token Type
           default: page
           options:
-            page: 'Page Token (permanent)'
-            user: 'User Token (60 days – auto-refresh)'
+            page: 'Page Token (permanent, recommended)'
+            fb_user: 'Facebook User Token (60 days, auto-refresh)'
+            ig_login: 'Instagram Login Token (60 days, auto-refresh)'
 
         .access_token:
           type: text
@@ -106,18 +107,18 @@ form:
         .token_expires:
           type: text
           label: Token Expiry Date
-          help: 'Format: YYYY-MM-DD — only needed for User Token type'
+          help: 'Format: YYYY-MM-DD — not needed for Page Tokens'
           placeholder: '2026-09-25'
 
         .app_id:
           type: text
           label: App ID
-          help: 'Required for Facebook User Token refresh only'
+          help: 'Required to refresh a Facebook User Token'
 
         .app_secret:
           type: text
           label: App Secret
-          help: 'Required for Facebook User Token refresh only'
+          help: 'Required to refresh a Facebook User Token'
 
         .use_shared_token:
           type: toggle

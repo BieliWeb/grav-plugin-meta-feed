@@ -1,0 +1,21 @@
+{# Default post layout. Override in your theme at templates/flex/post/object/default.html.twig #}
+<article class="meta-feed__post meta-feed__post--{{ post.provider }}">
+    {% set image = post.image_url %}
+    {% if image %}
+        <a class="meta-feed__media" href="{{ post.link }}" target="_blank" rel="noopener">
+            <img src="{{ image }}" alt="" loading="lazy">
+            {% if post.media_type == 'VIDEO' %}
+                <span class="meta-feed__badge">▶</span>
+            {% endif %}
+        </a>
+    {% endif %}
+
+    {% if post.message %}
+        <div class="meta-feed__body">{{ post.message|nl2br }}</div>
+    {% endif %}
+
+    <footer class="meta-feed__meta">
+        <time datetime="{{ post.published_at }}">{{ post.published_at|date('d.m.Y') }}</time>
+        <a href="{{ post.link }}" target="_blank" rel="noopener">{{ post.provider|capitalize }}</a>
+    </footer>
+</article>
