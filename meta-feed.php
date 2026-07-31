@@ -1,7 +1,9 @@
 <?php
 namespace Grav\Plugin;
 
+use Grav\Common\Grav;
 use Grav\Common\Plugin;
+use Grav\Common\Scheduler\Scheduler;
 use Grav\Events\FlexRegisterEvent;
 use Twig\TwigFunction;
 
@@ -29,8 +31,14 @@ class MetaFeedPlugin extends Plugin
         }
 
         $this->enable([
-            'onTwigInitialized' => ['onTwigInitialized', 0],
+            'onTwigInitialized'    => ['onTwigInitialized', 0],
+            'onTwigTemplatePaths'  => ['onTwigTemplatePaths', 0],
         ]);
+    }
+
+    public function onTwigTemplatePaths(): void
+    {
+        $this->grav['twig']->twig_paths[] = __DIR__ . '/templates';
     }
 
     public function onRegisterFlex($event): void
@@ -47,27 +55,54 @@ class MetaFeedPlugin extends Plugin
 
     public function onSchedulerInitialized($event): void
     {
+        /** @var Scheduler $scheduler */
         $scheduler = $event['scheduler'];
+        $config    = $this->grav['config'];
 
-        $scheduler->addFunction(
-            'meta-feed.fetch',
-            function (): void {
-                $this->registerAutoloader();
-                (new \Grav\Plugin\MetaFeed\PostFetcher($this->grav))->fetchAll();
-            },
-            '0 6 * * *',
-            'Meta Feed: Fetch posts from Meta API'
+        $job = $scheduler->addFunction(
+            'Grav\Plugin\MetaFeedPlugin::fetchJob',
+            [],
+            'meta-feed-fetch'
         );
+        $job->at($config->get('plugins.meta-feed.fetch_at', '0 6 * * *'));
+        $job->output('logs/meta-feed-fetch.out');
+        $job->backlink('/plugins/meta-feed');
 
-        $scheduler->addFunction(
-            'meta-feed.refresh-tokens',
-            function (): void {
-                $this->registerAutoloader();
-                (new \Grav\Plugin\MetaFeed\TokenManager($this->grav))->refreshAll();
-            },
-            '0 5 * * *',
-            'Meta Feed: Refresh expiring tokens'
+        $job = $scheduler->addFunction(
+            'Grav\Plugin\MetaFeedPlugin::refreshTokensJob',
+            [],
+            'meta-feed-refresh-tokens'
         );
+        $job->at($config->get('plugins.meta-feed.refresh_at', '0 5 * * *'));
+        $job->output('logs/meta-feed-refresh-tokens.out');
+        $job->backlink('/plugins/meta-feed');
+    }
+
+    /**
+     * Scheduler entry point. Runs in a separate process, so it cannot rely on
+     * plugin instance state.
+     */
+    public static function fetchJob(): void
+    {
+        $grav = Grav::instance();
+        self::bootstrap();
+        (new \Grav\Plugin\MetaFeed\PostFetcher($grav))->fetchAll();
+    }
+
+    /**
+     * Scheduler entry point. See fetchJob().
+     */
+    public static function refreshTokensJob(): void
+    {
+        $grav = Grav::instance();
+        self::bootstrap();
+        (new \Grav\Plugin\MetaFeed\TokenManager($grav))->refreshAll();
+    }
+
+    private static function bootstrap(): void
+    {
+        require_once __DIR__ . '/classes/Autoloader.php';
+        \Grav\Plugin\MetaFeed\Autoloader::register();
     }
 
     public function getPostsForTwig(string $provider = '', int $limit = 0): array
@@ -103,7 +138,6 @@ class MetaFeedPlugin extends Plugin
 
     private function registerAutoloader(): void
     {
-        require_once __DIR__ . '/classes/Autoloader.php';
-        \Grav\Plugin\MetaFeed\Autoloader::register();
+        self::bootstrap();
     }
 }
