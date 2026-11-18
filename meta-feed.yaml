@@ -3,4 +3,6 @@ api_version: '21.0'
 fetch_limit: 20
 fetch_at: '0 * * * *'
 refresh_at: '0 5 * * 1'
+notify_email: ''
+notify_interval_hours: 24
 accounts: []

@@ -33,6 +33,7 @@ class TokenManager
         $config   = $this->grav['config']->get('plugins.meta-feed');
         $accounts = $config['accounts'] ?? [];
         $updated  = false;
+        $errors   = [];
 
         foreach ($accounts as &$account) {
             $type = $account['token_type'] ?? 'page';
@@ -63,6 +64,7 @@ class TokenManager
                     'MetaFeed: Token refreshed for ' . $this->label($account) . ', valid until ' . $result['expires']
                 );
             } catch (\Exception $e) {
+                $errors[] = $this->label($account) . ': ' . $e->getMessage();
                 $this->grav['log']->error(
                     'MetaFeed: Token refresh failed for ' . $this->label($account) . ': ' . $e->getMessage()
                 );
@@ -73,6 +75,8 @@ class TokenManager
         if ($updated) {
             $this->saveAccounts($accounts);
         }
+
+        (new ErrorNotifier($this->grav))->notify('token refresh', $errors);
     }
 
     private function label(array $account): string

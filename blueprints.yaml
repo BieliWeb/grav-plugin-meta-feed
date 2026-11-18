@@ -1,7 +1,7 @@
 name: Meta Feed
 slug: meta-feed
 type: plugin
-version: 0.1.0
+version: 0.2.0
 description: Fetch and display Instagram and Facebook feeds using the Meta Graph API
 icon: share-alt
 author:
@@ -63,6 +63,20 @@ form:
       label: Token refresh schedule
       default: '0 5 * * 1'
       help: 'When to check tokens for upcoming expiry. Weekly is enough, since tokens are renewed 15 days before they expire.'
+
+    notify_email:
+      type: email
+      label: Error notification recipient
+      help: 'Receives a mail when a fetch or token refresh fails. Leave empty to disable.'
+
+    notify_interval_hours:
+      type: number
+      label: Minimum hours between error mails
+      default: 24
+      validate:
+        min: 0
+        max: 720
+      help: 'At most one mail per error type (fetch, token refresh) and interval.'
 
     accounts_section:
       type: section

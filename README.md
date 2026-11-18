@@ -312,6 +312,20 @@ Both schedules are configurable through the `fetch_at` and `refresh_at` options 
 settings. Make sure Grav's scheduler cron entry is installed — see **Tools → Scheduler** in the
 admin.
 
+### Error notifications
+
+If a fetch or token refresh fails, the plugin sends a mail through Grav's Email plugin. To
+avoid a mail every hour, it sends at most one per error type (fetch, token refresh) and interval.
+The sender is the one configured in the Email plugin (`plugins.email.from`).
+
+| Option | Default | Purpose |
+|---|---|---|
+| `notify_email` | empty | Recipient. Empty disables notifications |
+| `notify_interval_hours` | `24` | Minimum hours between two mails of the same type |
+
+The time of the last mail is stored in `user/data/meta-feed/notify-state.json`, per error type. It is only
+updated after the mailer accepted the message, so a failed send is retried on the next run.
+
 ### Manual runs
 
 A **Fetch Social Posts** button is available in the admin toolbar. It asks for confirmation, then
