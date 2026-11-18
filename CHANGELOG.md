@@ -3,6 +3,7 @@
 
 1. [](#new)
     * Error mail notification, throttled per error type
+    * Activity overview of recent fetch and token refresh runs in the plugin settings
 
 # v0.1.0
 ##  07/28/2026

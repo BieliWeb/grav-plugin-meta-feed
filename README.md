@@ -326,6 +326,12 @@ The sender is the one configured in the Email plugin (`plugins.email.from`).
 The time of the last mail is stored in `user/data/meta-feed/notify-state.json`, per error type. It is only
 updated after the mailer accepted the message, so a failed send is retried on the next run.
 
+### Activity overview
+
+The plugin settings show an **Activity** section listing the last 100 fetch and token refresh runs with
+time, status and details. The data is stored in `user/data/meta-feed/activity.json`. It requires
+the `api.system.read` permission and Admin Next (Admin2).
+
 ### Manual runs
 
 A **Fetch Social Posts** button is available in the admin toolbar. It asks for confirmation, then

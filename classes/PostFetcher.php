@@ -37,6 +37,7 @@ class PostFetcher
         if (!$directory) {
             $message = 'Flex directory "post" not found.';
             $this->grav['log']->error('MetaFeed: ' . $message);
+            (new ActivityLog($this->grav))->record('fetch', false, $message);
             (new ErrorNotifier($this->grav))->notify('fetch', [$message]);
 
             return ['added' => 0, 'errors' => [$message]];
@@ -66,6 +67,13 @@ class PostFetcher
             $this->invalidatePageCache();
         }
 
+        (new ActivityLog($this->grav))->record(
+            'fetch',
+            !$errors,
+            $errors
+                ? implode('; ', $errors)
+                : ($added > 0 ? sprintf('%d new post(s)', $added) : 'No new posts')
+        );
         (new ErrorNotifier($this->grav))->notify('fetch', $errors);
 
         return ['added' => $added, 'errors' => $errors];

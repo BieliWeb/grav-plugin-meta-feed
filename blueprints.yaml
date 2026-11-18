@@ -155,3 +155,11 @@ form:
           type: text
           label: Shared Token Page / User ID
           help: 'The Page / User ID of the account whose token to use'
+
+    activity_section:
+      type: section
+      title: Activity
+      underline: true
+
+    activity:
+      type: meta-feed-activity

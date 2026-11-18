@@ -20,6 +20,7 @@ class MetaFeedPlugin extends Plugin
             'onSchedulerInitialized' => [['onSchedulerInitialized', 0]],
             'onApiMenubarItems'      => [['onApiMenubarItems', 0]],
             'onApiMenubarAction'     => [['onApiMenubarAction', 0]],
+            'onApiRegisterRoutes'    => [['onApiRegisterRoutes', 0]],
             FlexRegisterEvent::class => [['onRegisterFlex', 0]],
         ];
     }
@@ -78,6 +79,11 @@ class MetaFeedPlugin extends Plugin
         $job->at($config->get('plugins.meta-feed.refresh_at', '0 5 * * 1'));
         $job->output('logs/meta-feed-refresh-tokens.out');
         $job->backlink('/plugins/meta-feed');
+    }
+
+    public function onApiRegisterRoutes($event): void
+    {
+        $event['routes']->get('/meta-feed/activity', [\Grav\Plugin\MetaFeed\Api\ActivityApiController::class, 'index']);
     }
 
     /**

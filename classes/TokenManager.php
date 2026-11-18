@@ -34,6 +34,7 @@ class TokenManager
         $accounts = $config['accounts'] ?? [];
         $updated  = false;
         $errors   = [];
+        $refreshed = 0;
 
         foreach ($accounts as &$account) {
             $type = $account['token_type'] ?? 'page';
@@ -59,6 +60,7 @@ class TokenManager
                 $account['access_token']  = $result['token'];
                 $account['token_expires'] = $result['expires'];
                 $updated = true;
+                $refreshed++;
 
                 $this->grav['log']->info(
                     'MetaFeed: Token refreshed for ' . $this->label($account) . ', valid until ' . $result['expires']
@@ -76,6 +78,13 @@ class TokenManager
             $this->saveAccounts($accounts);
         }
 
+        (new ActivityLog($this->grav))->record(
+            'token_refresh',
+            !$errors,
+            $errors
+                ? implode('; ', $errors)
+                : ($refreshed > 0 ? sprintf('%d token(s) renewed', $refreshed) : 'No token due for renewal')
+        );
         (new ErrorNotifier($this->grav))->notify('token refresh', $errors);
     }
 
